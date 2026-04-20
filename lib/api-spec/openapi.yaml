@@ -1,0 +1,486 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: StockWatch API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: stocks
+    description: Stock data operations
+  - name: watchlist
+    description: Watchlist operations
+  - name: portfolio
+    description: Portfolio operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /stocks/quote:
+    get:
+      operationId: getStockQuote
+      tags: [stocks]
+      summary: Get live stock quote
+      parameters:
+        - name: symbol
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Stock quote
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StockQuote"
+        "400":
+          description: Bad request
+        "404":
+          description: Symbol not found
+
+  /stocks/quotes:
+    get:
+      operationId: getBatchStockQuotes
+      tags: [stocks]
+      summary: Get multiple stock quotes
+      parameters:
+        - name: symbols
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Comma-separated list of symbols
+      responses:
+        "200":
+          description: List of stock quotes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StockQuote"
+
+  /stocks/search:
+    get:
+      operationId: searchStocks
+      tags: [stocks]
+      summary: Search for stocks by name or symbol
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StockSearchResult"
+
+  /stocks/trending:
+    get:
+      operationId: getTrendingStocks
+      tags: [stocks]
+      summary: Get trending/popular stocks
+      responses:
+        "200":
+          description: List of trending stocks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StockQuote"
+
+  /stocks/movers:
+    get:
+      operationId: getMarketMovers
+      tags: [stocks]
+      summary: Get top gainers and losers
+      responses:
+        "200":
+          description: Market movers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketMovers"
+
+  /watchlist:
+    get:
+      operationId: getWatchlist
+      tags: [watchlist]
+      summary: Get user watchlist
+      responses:
+        "200":
+          description: Watchlist items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WatchlistItem"
+    post:
+      operationId: addToWatchlist
+      tags: [watchlist]
+      summary: Add symbol to watchlist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWatchlistItemBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WatchlistItem"
+        "400":
+          description: Bad request
+        "409":
+          description: Already in watchlist
+
+  /watchlist/{id}:
+    delete:
+      operationId: removeFromWatchlist
+      tags: [watchlist]
+      summary: Remove symbol from watchlist
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /portfolio:
+    get:
+      operationId: getPortfolio
+      tags: [portfolio]
+      summary: Get portfolio positions
+      responses:
+        "200":
+          description: Portfolio positions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PortfolioPosition"
+    post:
+      operationId: addPortfolioPosition
+      tags: [portfolio]
+      summary: Add a portfolio position
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePortfolioPositionBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioPosition"
+        "400":
+          description: Bad request
+
+  /portfolio/{id}:
+    patch:
+      operationId: updatePortfolioPosition
+      tags: [portfolio]
+      summary: Update a portfolio position
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePortfolioPositionBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioPosition"
+        "404":
+          description: Not found
+    delete:
+      operationId: deletePortfolioPosition
+      tags: [portfolio]
+      summary: Delete a portfolio position
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /portfolio/summary:
+    get:
+      operationId: getPortfolioSummary
+      tags: [portfolio]
+      summary: Get portfolio summary with live prices
+      responses:
+        "200":
+          description: Portfolio summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioSummary"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    StockQuote:
+      type: object
+      properties:
+        symbol:
+          type: string
+        shortName:
+          type: string
+        longName:
+          type: ["string", "null"]
+        currentPrice:
+          type: number
+        previousClose:
+          type: number
+        open:
+          type: ["number", "null"]
+        dayHigh:
+          type: ["number", "null"]
+        dayLow:
+          type: ["number", "null"]
+        volume:
+          type: ["integer", "null"]
+        marketCap:
+          type: ["integer", "null"]
+        change:
+          type: number
+        changePercent:
+          type: number
+        fiftyTwoWeekHigh:
+          type: ["number", "null"]
+        fiftyTwoWeekLow:
+          type: ["number", "null"]
+        currency:
+          type: string
+        marketState:
+          type: string
+        timestamp:
+          type: string
+      required:
+        - symbol
+        - shortName
+        - currentPrice
+        - previousClose
+        - change
+        - changePercent
+        - currency
+        - marketState
+        - timestamp
+
+    StockSearchResult:
+      type: object
+      properties:
+        symbol:
+          type: string
+        shortname:
+          type: ["string", "null"]
+        longname:
+          type: ["string", "null"]
+        exchDisp:
+          type: string
+        typeDisp:
+          type: string
+      required:
+        - symbol
+        - exchDisp
+        - typeDisp
+
+    MarketMovers:
+      type: object
+      properties:
+        gainers:
+          type: array
+          items:
+            $ref: "#/components/schemas/StockQuote"
+        losers:
+          type: array
+          items:
+            $ref: "#/components/schemas/StockQuote"
+      required:
+        - gainers
+        - losers
+
+    WatchlistItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        symbol:
+          type: string
+        addedAt:
+          type: string
+      required:
+        - id
+        - symbol
+        - addedAt
+
+    CreateWatchlistItemBody:
+      type: object
+      properties:
+        symbol:
+          type: string
+      required:
+        - symbol
+
+    PortfolioPosition:
+      type: object
+      properties:
+        id:
+          type: integer
+        symbol:
+          type: string
+        shares:
+          type: number
+        buyPrice:
+          type: number
+        addedAt:
+          type: string
+        notes:
+          type: ["string", "null"]
+      required:
+        - id
+        - symbol
+        - shares
+        - buyPrice
+        - addedAt
+
+    CreatePortfolioPositionBody:
+      type: object
+      properties:
+        symbol:
+          type: string
+        shares:
+          type: number
+        buyPrice:
+          type: number
+        notes:
+          type: ["string", "null"]
+      required:
+        - symbol
+        - shares
+        - buyPrice
+
+    UpdatePortfolioPositionBody:
+      type: object
+      properties:
+        shares:
+          type: number
+        buyPrice:
+          type: number
+        notes:
+          type: ["string", "null"]
+
+    PortfolioSummary:
+      type: object
+      properties:
+        totalValue:
+          type: number
+        totalCost:
+          type: number
+        totalGainLoss:
+          type: number
+        totalGainLossPercent:
+          type: number
+        positions:
+          type: array
+          items:
+            $ref: "#/components/schemas/PortfolioPositionWithQuote"
+      required:
+        - totalValue
+        - totalCost
+        - totalGainLoss
+        - totalGainLossPercent
+        - positions
+
+    PortfolioPositionWithQuote:
+      type: object
+      properties:
+        id:
+          type: integer
+        symbol:
+          type: string
+        shares:
+          type: number
+        buyPrice:
+          type: number
+        notes:
+          type: ["string", "null"]
+        addedAt:
+          type: string
+        currentPrice:
+          type: ["number", "null"]
+        currentValue:
+          type: ["number", "null"]
+        costBasis:
+          type: number
+        gainLoss:
+          type: ["number", "null"]
+        gainLossPercent:
+          type: ["number", "null"]
+        shortName:
+          type: ["string", "null"]
+      required:
+        - id
+        - symbol
+        - shares
+        - buyPrice
+        - addedAt
+        - costBasis
