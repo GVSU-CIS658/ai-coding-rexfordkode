@@ -124,10 +124,11 @@ import StockCard from "../components/StockCard.vue";
 import LoadingSpinner from "../components/LoadingSpinner.vue";
 import StatCard from "../components/StatCard.vue";
 import { formatPercent } from "../lib/format";
+import { useToast } from "../composables/useToast";
 
 const stockStore = useStockStore();
 const loading = ref(false);
-const toast = ref<string | null>(null);
+const { toast, showToast } = useToast();
 
 const watchlistSymbols = computed(() => stockStore.watchlistSymbols);
 const gainers = computed(() => stockStore.marketMovers.gainers);
@@ -157,11 +158,6 @@ async function refreshData() {
     stockStore.fetchWatchlist(),
   ]);
   loading.value = false;
-}
-
-function showToast(msg: string) {
-  toast.value = msg;
-  setTimeout(() => { toast.value = null; }, 2500);
 }
 
 async function handleAddToWatchlist(symbol: string) {

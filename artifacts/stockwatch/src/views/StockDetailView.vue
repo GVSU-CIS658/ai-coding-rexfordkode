@@ -189,6 +189,7 @@ import LoadingSpinner from "../components/LoadingSpinner.vue";
 import AppModal from "../components/AppModal.vue";
 import { formatPrice, formatChange, formatPercent, formatVolume, formatMarketCap } from "../lib/format";
 import type { StockQuote } from "../stores/stocks";
+import { useToast } from "../composables/useToast";
 
 const route = useRoute();
 const symbol = computed(() => (route.params.symbol as string).toUpperCase());
@@ -201,7 +202,7 @@ const quote = ref<StockQuote | null>(null);
 const showPortfolioModal = ref(false);
 const portfolioForm = ref({ shares: 0, buyPrice: 0, notes: "" });
 const portfolioLoading = ref(false);
-const toast = ref<string | null>(null);
+const { toast, showToast } = useToast();
 
 const inWatchlist = computed(() => stockStore.watchlistSymbols.has(symbol.value));
 
@@ -260,11 +261,6 @@ async function submitPortfolio() {
   } finally {
     portfolioLoading.value = false;
   }
-}
-
-function showToast(msg: string) {
-  toast.value = msg;
-  setTimeout(() => { toast.value = null; }, 2500);
 }
 
 onMounted(async () => {

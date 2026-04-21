@@ -185,7 +185,8 @@ import LoadingSpinner from "../components/LoadingSpinner.vue";
 import StatCard from "../components/StatCard.vue";
 import AppModal from "../components/AppModal.vue";
 import { formatPrice, formatChange, formatPercent, formatVolume, formatMarketCap } from "../lib/format";
-import { api } from "../lib/api";
+import { mockApi as api } from "../lib/mockApi";
+import { useToast } from "../composables/useToast";
 
 const stockStore = useStockStore();
 const loading = ref(false);
@@ -194,7 +195,7 @@ const showAddModal = ref(false);
 const addQuery = ref("");
 const addResults = ref<Array<{ symbol: string; shortname: string | null; longname: string | null; exchDisp: string; typeDisp: string }>>([]);
 const addLoading = ref(false);
-const toast = ref<string | null>(null);
+const { toast, showToast } = useToast();
 
 const watchlistWithQuotes = computed(() =>
   stockStore.watchlist.map(item => ({
@@ -250,11 +251,6 @@ async function refreshQuotes() {
   refreshing.value = true;
   await stockStore.refreshWatchlistQuotes();
   refreshing.value = false;
-}
-
-function showToast(msg: string) {
-  toast.value = msg;
-  setTimeout(() => { toast.value = null; }, 2500);
 }
 
 onMounted(async () => {

@@ -112,12 +112,13 @@ import { useStockStore } from "../stores/stocks";
 import StockCard from "../components/StockCard.vue";
 import LoadingSpinner from "../components/LoadingSpinner.vue";
 import type { StockQuote } from "../stores/stocks";
+import { useToast } from "../composables/useToast";
 
 const router = useRouter();
 const stockStore = useStockStore();
 const query = ref("");
 const selectedQuote = ref<StockQuote | null>(null);
-const toast = ref<string | null>(null);
+const { toast, showToast } = useToast();
 
 const popularTickers = ["AAPL", "MSFT", "GOOGL", "NVDA", "TSLA", "META", "AMZN", "SPY", "QQQ", "BRK-B"];
 
@@ -138,11 +139,6 @@ async function selectTicker(ticker: string) {
 
 function goToStock(symbol: string) {
   router.push(`/stock/${symbol}`);
-}
-
-function showToast(msg: string) {
-  toast.value = msg;
-  setTimeout(() => { toast.value = null; }, 2500);
 }
 
 async function handleAddToWatchlist(symbol: string) {

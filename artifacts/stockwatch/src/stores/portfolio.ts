@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { api } from "../lib/api";
+import { mockApi as api } from "../lib/mockApi";
 
 export interface PortfolioPosition {
   id: number;

@@ -227,13 +227,14 @@ import { usePortfolioStore } from "../stores/portfolio";
 import LoadingSpinner from "../components/LoadingSpinner.vue";
 import AppModal from "../components/AppModal.vue";
 import { formatPrice, formatChange, formatPercent } from "../lib/format";
+import { useToast } from "../composables/useToast";
 
 const portfolioStore = usePortfolioStore();
 const showAddModal = ref(false);
-const toast = ref<string | null>(null);
 const addLoading = ref(false);
 const addError = ref<string | null>(null);
 const form = ref({ symbol: "", shares: 0, buyPrice: 0, notes: "" });
+const { toast, showToast } = useToast();
 
 async function submitAdd() {
   addError.value = null;
@@ -265,11 +266,6 @@ async function deletePos(id: number, symbol: string) {
   await portfolioStore.deletePosition(id);
   await portfolioStore.fetchSummary();
   showToast(`${symbol} removed`);
-}
-
-function showToast(msg: string) {
-  toast.value = msg;
-  setTimeout(() => { toast.value = null; }, 2500);
 }
 
 onMounted(async () => {

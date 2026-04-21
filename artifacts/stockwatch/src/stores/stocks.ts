@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
-import { api } from "../lib/api";
+import { mockApi as api } from "../lib/mockApi";
 
 export interface StockQuote {
   symbol: string;
