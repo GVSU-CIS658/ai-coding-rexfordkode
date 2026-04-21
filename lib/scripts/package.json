@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "deploy:github-pages": "bash ./deploy-stockwatch-gh-pages.sh",
+    "deploy:github-pages-local": "bash ./deploy-stockwatch-local.sh",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {

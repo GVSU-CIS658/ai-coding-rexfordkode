@@ -25,7 +25,7 @@ export VITE_USE_MOCK=true
 
 echo "Building stockwatch for GitHub Pages at base path: $BASE_PATH"
 echo "Using MOCK API mode (no backend server required)"
-pnpm install --frozen-lockfile
+CI=true pnpm install --frozen-lockfile
 PORT=3000 BASE_PATH="$BASE_PATH" VITE_USE_MOCK=true pnpm --filter @workspace/stockwatch build
 
 if [[ ! -d "$BUILD_DIR" ]]; then
@@ -52,6 +52,11 @@ find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
 
 # Copy build output and publish
 rsync -a "$BUILD_DIR"/ "$PUBLISH_DIR"/
+
+# GitHub Pages does not rewrite unknown routes to index.html, so publish a
+# fallback page for Vue Router history mode.
+cp "$BUILD_DIR/index.html" "$PUBLISH_DIR/404.html"
+
 touch "$PUBLISH_DIR/.nojekyll"
 
 git add -A
