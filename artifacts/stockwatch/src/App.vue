@@ -4,7 +4,7 @@
     <main class="pb-20 md:pb-0 md:pl-64 md:min-h-screen">
       <RouterView v-slot="{ Component }">
         <Transition name="fade" mode="out-in">
-          <component :is="Component" />
+          <component v-if="Component" :is="Component" />
         </Transition>
       </RouterView>
     </main>

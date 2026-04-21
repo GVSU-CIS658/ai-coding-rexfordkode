@@ -1,7 +1,7 @@
 <template>
   <div class="p-4 md:p-8 max-w-4xl mx-auto">
     <!-- Back button -->
-    <button @click="$router.back()"
+    <button @click="router.back()"
       class="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6">
       <ChevronLeft class="w-4 h-4" />
       Back
@@ -66,61 +66,124 @@
         </button>
       </div>
 
-      <!-- Key Stats Grid -->
-      <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-        <div class="bg-card border border-border rounded-xl p-3.5">
-          <p class="text-xs text-muted-foreground mb-1">Previous Close</p>
-          <p class="font-semibold mono text-sm">{{ formatPrice(quote.previousClose) }}</p>
-        </div>
-        <div class="bg-card border border-border rounded-xl p-3.5">
-          <p class="text-xs text-muted-foreground mb-1">Open</p>
-          <p class="font-semibold mono text-sm">{{ formatPrice(quote.open) }}</p>
-        </div>
-        <div class="bg-card border border-border rounded-xl p-3.5">
-          <p class="text-xs text-muted-foreground mb-1">Day's Range</p>
-          <p class="font-semibold mono text-sm">
-            <span v-if="quote.dayLow && quote.dayHigh">{{ formatPrice(quote.dayLow) }} – {{ formatPrice(quote.dayHigh)
-              }}</span>
-            <span v-else>—</span>
-          </p>
-        </div>
-        <div class="bg-card border border-border rounded-xl p-3.5">
-          <p class="text-xs text-muted-foreground mb-1">Volume</p>
-          <p class="font-semibold mono text-sm">{{ formatVolume(quote.volume) }}</p>
-        </div>
-        <div class="bg-card border border-border rounded-xl p-3.5">
-          <p class="text-xs text-muted-foreground mb-1">Market Cap</p>
-          <p class="font-semibold mono text-sm">{{ formatMarketCap(quote.marketCap) }}</p>
-        </div>
-        <div class="bg-card border border-border rounded-xl p-3.5">
-          <p class="text-xs text-muted-foreground mb-1">52W Range</p>
-          <p class="font-semibold mono text-sm">
-            <span v-if="quote.fiftyTwoWeekLow && quote.fiftyTwoWeekHigh">
-              {{ formatPrice(quote.fiftyTwoWeekLow) }} – {{ formatPrice(quote.fiftyTwoWeekHigh) }}
-            </span>
-            <span v-else>—</span>
-          </p>
-        </div>
-      </div>
+      <!-- Dashboard Snapshot -->
+      <div class="relative overflow-hidden rounded-3xl border border-border bg-card/90 p-4 md:p-5 mb-6 shadow-lg">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,197,94,0.14),transparent_32%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.12),transparent_34%)]"></div>
+        <div class="relative grid gap-4 lg:grid-cols-[1.4fr_0.9fr]">
+          <div class="rounded-2xl border border-white/10 bg-white/5 p-4 md:p-5 backdrop-blur-sm">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p class="text-xs uppercase tracking-[0.25em] text-muted-foreground">Market Pulse</p>
+                <h2 class="mt-2 text-3xl md:text-4xl font-bold mono tracking-tight">{{ formatPrice(quote.currentPrice, quote.currency) }}</h2>
+                <div class="mt-2 flex flex-wrap items-center gap-2">
+                  <span class="rounded-full border px-2.5 py-1 text-[11px] font-medium"
+                    :class="quote.changePercent >= 0 ? 'border-green-400/40 bg-green-400/10 text-green-300' : 'border-red-400/40 bg-red-400/10 text-red-300'">
+                    {{ formatChange(quote.change) }} / {{ formatPercent(quote.changePercent) }}
+                  </span>
+                  <span class="rounded-full border border-border bg-background/60 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+                    {{ marketStateLabel }}
+                  </span>
+                  <span class="rounded-full border border-border bg-background/60 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+                    {{ sessionMood }}
+                  </span>
+                </div>
+                <p class="mt-3 max-w-md text-sm text-muted-foreground">
+                  {{ sessionNarrative }}
+                </p>
+              </div>
+              <div class="text-right">
+                <p class="text-xs uppercase tracking-[0.25em] text-muted-foreground">Ticker</p>
+                <p class="mt-2 text-2xl font-semibold mono">{{ quote.symbol }}</p>
+                <p class="text-sm text-muted-foreground">{{ quote.longName || quote.shortName }}</p>
+              </div>
+            </div>
 
-      <!-- 52 Week Range Indicator -->
-      <div v-if="quote.fiftyTwoWeekLow && quote.fiftyTwoWeekHigh"
-        class="bg-card border border-border rounded-xl p-4 mb-6">
-        <div class="flex items-center justify-between mb-2">
-          <p class="text-xs text-muted-foreground font-medium uppercase tracking-wide">52-Week Range</p>
-          <p class="text-xs text-muted-foreground mono">{{ weekRangePercent.toFixed(1) }}% from low</p>
-        </div>
-        <div class="relative h-2 bg-secondary rounded-full overflow-hidden">
-          <div class="absolute left-0 top-0 h-full rounded-full"
-            :class="quote.changePercent >= 0 ? 'bg-green-400' : 'bg-red-400'"
-            :style="{ width: `${weekRangePercent}%` }"></div>
-          <div class="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white shadow-md border-2"
-            :class="quote.changePercent >= 0 ? 'border-green-400' : 'border-red-400'"
-            :style="{ left: `calc(${weekRangePercent}% - 6px)` }"></div>
-        </div>
-        <div class="flex justify-between mt-1.5">
-          <span class="text-xs mono text-muted-foreground">{{ formatPrice(quote.fiftyTwoWeekLow) }}</span>
-          <span class="text-xs mono text-muted-foreground">{{ formatPrice(quote.fiftyTwoWeekHigh) }}</span>
+            <div class="mt-5">
+              <div class="flex items-center justify-between text-xs uppercase tracking-wide text-muted-foreground">
+                <span>Session Range</span>
+                <span>{{ sessionRangePercent.toFixed(0) }}% filled</span>
+              </div>
+              <div class="relative mt-2 h-3 overflow-hidden rounded-full bg-secondary/80">
+                <div
+                  class="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-amber-400"
+                  :style="{ width: `${sessionRangePercent}%` }"
+                />
+                <div
+                  class="absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full border-2 bg-card shadow-lg"
+                  :class="quote.changePercent >= 0 ? 'border-green-400' : 'border-red-400'"
+                  :style="{ left: `calc(${sessionRangePercent}% - 10px)` }"
+                />
+              </div>
+              <div class="mt-2 flex items-center justify-between text-[11px] mono text-muted-foreground">
+                <span>{{ formatPrice(quote.dayLow) }}</span>
+                <span v-if="quote.open != null">Open {{ formatPrice(quote.open) }}</span>
+                <span>{{ formatPrice(quote.dayHigh) }}</span>
+              </div>
+            </div>
+
+            <div class="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+              <div class="rounded-2xl border border-border/70 bg-background/60 p-3">
+                <p class="text-[11px] uppercase tracking-wide text-muted-foreground">Previous Close</p>
+                <p class="mt-1 text-sm font-semibold mono">{{ formatPrice(quote.previousClose) }}</p>
+              </div>
+              <div class="rounded-2xl border border-border/70 bg-background/60 p-3">
+                <p class="text-[11px] uppercase tracking-wide text-muted-foreground">Open</p>
+                <p class="mt-1 text-sm font-semibold mono">{{ formatPrice(quote.open) }}</p>
+              </div>
+              <div class="rounded-2xl border border-border/70 bg-background/60 p-3">
+                <p class="text-[11px] uppercase tracking-wide text-muted-foreground">Volume</p>
+                <p class="mt-1 text-sm font-semibold mono">{{ formatVolume(quote.volume) }}</p>
+              </div>
+              <div class="rounded-2xl border border-border/70 bg-background/60 p-3">
+                <p class="text-[11px] uppercase tracking-wide text-muted-foreground">Market Cap</p>
+                <p class="mt-1 text-sm font-semibold mono">{{ formatMarketCap(quote.marketCap) }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="flex flex-col items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-4 text-center backdrop-blur-sm"
+          >
+            <div>
+              <p class="text-xs uppercase tracking-[0.25em] text-muted-foreground">52W Compass</p>
+              <div class="relative mx-auto mt-4 h-44 w-44">
+                <div
+                  class="absolute inset-0 rounded-full shadow-[0_0_40px_rgba(34,197,94,0.15)]"
+                  :style="weekRingStyle"
+                />
+                <div class="absolute inset-3 rounded-full border border-white/10 bg-card/95" />
+                <div class="absolute inset-6 rounded-full border border-border bg-background/95 flex flex-col items-center justify-center">
+                  <p class="text-xs uppercase tracking-wide text-muted-foreground">Position</p>
+                  <p class="mt-1 text-3xl font-bold mono">{{ weekRangePercent.toFixed(0) }}%</p>
+                  <p class="text-xs text-muted-foreground">from 52W low</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid w-full grid-cols-2 gap-3">
+              <div class="rounded-2xl border border-border/70 bg-background/60 p-3 text-left">
+                <p class="text-[11px] uppercase tracking-wide text-muted-foreground">To High</p>
+                <p class="mt-1 text-sm font-semibold mono">{{ formatPrice(distanceToHigh) }}</p>
+                <p class="text-[11px] text-muted-foreground">Remaining room</p>
+              </div>
+              <div class="rounded-2xl border border-border/70 bg-background/60 p-3 text-left">
+                <p class="text-[11px] uppercase tracking-wide text-muted-foreground">Above Low</p>
+                <p class="mt-1 text-sm font-semibold mono">{{ formatPrice(distanceFromLow) }}</p>
+                <p class="text-[11px] text-muted-foreground">Safety buffer</p>
+              </div>
+            </div>
+
+            <div class="mt-3 w-full flex justify-between text-xs mono text-muted-foreground">
+              <div>
+                <p>Low</p>
+                <p class="mt-0.5">{{ formatPrice(quote.fiftyTwoWeekLow) }}</p>
+              </div>
+              <div class="text-right">
+                <p>High</p>
+                <p class="mt-0.5">{{ formatPrice(quote.fiftyTwoWeekHigh) }}</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -171,7 +234,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import {
   ChevronLeft, BookmarkPlus, BookmarkCheck, Plus,
   RefreshCw, AlertCircle
@@ -187,6 +250,7 @@ import { withLoading } from "../lib/withLoading";
 import { useToast } from "../composables/useToast";
 
 const route = useRoute();
+const router = useRouter();
 const symbol = computed(() => (route.params.symbol as string).toUpperCase());
 const stockStore = useStockStore();
 const portfolioStore = usePortfolioStore();
@@ -214,6 +278,49 @@ const weekRangePercent = computed(() => {
   const range = quote.value.fiftyTwoWeekHigh - quote.value.fiftyTwoWeekLow;
   if (range === 0) return 0;
   return Math.min(100, Math.max(0, ((quote.value.currentPrice - quote.value.fiftyTwoWeekLow) / range) * 100));
+});
+
+const sessionRangePercent = computed(() => {
+  if (quote.value?.dayLow == null || quote.value?.dayHigh == null) return 0;
+  const range = quote.value.dayHigh - quote.value.dayLow;
+  if (range === 0) return 0;
+  return Math.min(100, Math.max(0, ((quote.value.currentPrice - quote.value.dayLow) / range) * 100));
+});
+
+const distanceToHigh = computed(() => {
+  if (quote.value?.fiftyTwoWeekHigh == null) return null;
+  return Math.max(0, quote.value.fiftyTwoWeekHigh - quote.value.currentPrice);
+});
+
+const distanceFromLow = computed(() => {
+  if (quote.value?.fiftyTwoWeekLow == null) return null;
+  return Math.max(0, quote.value.currentPrice - quote.value.fiftyTwoWeekLow);
+});
+
+const sessionMood = computed(() => {
+  const movement = Math.abs(quote.value?.changePercent ?? 0);
+  if (movement >= 5) return "Volatile";
+  if (movement >= 2) return "Active";
+  if (movement >= 0.5) return "Steady";
+  return "Calm";
+});
+
+const sessionNarrative = computed(() => {
+  if (!quote.value) return "";
+  if (quote.value.changePercent > 0) {
+    return `The tape is leaning higher, with price ${formatPercent(quote.value.changePercent)} on the day and ${formatPrice(distanceFromLow.value)} above the 52-week low.`;
+  }
+  if (quote.value.changePercent < 0) {
+    return `Momentum is cooling off, but price still sits ${formatPrice(distanceFromLow.value)} above the 52-week low and ${formatPrice(distanceToHigh.value)} below the 52-week high.`;
+  }
+  return `Price is trading flat, with the current quote sitting ${formatPrice(distanceFromLow.value)} above the 52-week low.`;
+});
+
+const weekRingStyle = computed(() => {
+  const activeColor = quote.value && quote.value.changePercent >= 0 ? "rgb(74 222 128)" : "rgb(248 113 113)";
+  return {
+    background: `conic-gradient(${activeColor} 0% ${weekRangePercent.value}%, rgba(255,255,255,0.08) ${weekRangePercent.value}% 100%)`,
+  };
 });
 
 async function loadQuote() {

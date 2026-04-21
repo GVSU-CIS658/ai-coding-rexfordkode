@@ -43,7 +43,8 @@
         </div>
         <div class="bg-card border border-border rounded-xl p-4 col-span-2">
           <p class="text-xs text-muted-foreground font-medium uppercase tracking-wide">Total Gain/Loss</p>
-          <p class="text-xl font-semibold mono mt-1.5" :class="summary.totalGainLoss >= 0 ? 'text-green-400' : 'text-red-400'">
+          <p class="text-xl font-semibold mono mt-1.5"
+            :class="summary.totalGainLoss >= 0 ? 'text-green-400' : 'text-red-400'">
             {{ formatChange(summary.totalGainLoss) }}
             <span class="text-base ml-1.5 opacity-80">{{ formatPercent(summary.totalGainLossPercent) }}</span>
           </p>
@@ -120,8 +121,7 @@
 
       <!-- Cards - Mobile -->
       <div class="md:hidden space-y-3">
-        <div v-for="pos in positions" :key="pos.id"
-          class="bg-card border border-border rounded-xl p-4">
+        <div v-for="pos in positions" :key="pos.id" class="bg-card border border-border rounded-xl p-4">
           <div class="flex items-start justify-between mb-3">
             <div class="cursor-pointer" @click="$router.push(`/stock/${pos.symbol}`)">
               <p class="font-semibold mono text-sm">{{ pos.symbol }}</p>

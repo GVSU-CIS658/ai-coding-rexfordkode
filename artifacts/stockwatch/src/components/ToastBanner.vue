@@ -12,10 +12,20 @@
   </Transition>
 </template>
 
-<script setup lang="ts">
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
 import { CheckCircle } from "lucide-vue-next";
 
-defineProps<{
-  message: string | null;
-}>();
+export default defineComponent({
+  name: "ToastBanner",
+  props: {
+    message: {
+      type: null as unknown as PropType<string | null>,
+      default: null,
+    },
+  },
+  components: {
+    CheckCircle,
+  },
+});
 </script>

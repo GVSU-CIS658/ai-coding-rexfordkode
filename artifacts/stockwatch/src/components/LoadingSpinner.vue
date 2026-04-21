@@ -7,19 +7,31 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { computed } from "vue";
+<script lang="ts">
+import { computed, defineComponent } from "vue";
 
-const props = defineProps<{
-  size?: "sm" | "md" | "lg";
-  fullScreen?: boolean;
-}>();
+export default defineComponent({
+  name: "LoadingSpinner",
+  props: {
+    size: {
+      type: String,
+      default: "md",
+    },
+    fullScreen: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  setup(props) {
+    const sizeClass = computed(() => {
+      switch (props.size) {
+        case "sm": return "w-4 h-4";
+        case "lg": return "w-10 h-10";
+        default: return "w-7 h-7";
+      }
+    });
 
-const sizeClass = computed(() => {
-  switch (props.size) {
-    case "sm": return "w-4 h-4";
-    case "lg": return "w-10 h-10";
-    default: return "w-7 h-7";
-  }
+    return { sizeClass };
+  },
 });
 </script>
