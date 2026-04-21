@@ -38,7 +38,9 @@
           <div class="flex items-center gap-1 justify-end mt-1">
             <div class="w-1.5 h-1.5 rounded-full"
               :class="quote.marketState === 'REGULAR' ? 'bg-green-400' : 'bg-yellow-400'"></div>
-            <span class="text-xs text-muted-foreground">{{ quote.marketState === 'REGULAR' ? 'Market Open' : quote.marketState === 'PRE' ? 'Pre-Market' : quote.marketState === 'POST' ? 'After-Hours' : 'Market Closed' }}</span>
+            <span class="text-xs text-muted-foreground">{{ quote.marketState === 'REGULAR' ? 'Market Open' :
+              quote.marketState === 'PRE' ? 'Pre-Market' : quote.marketState === 'POST' ? 'After-Hours' : 'Market
+              Closed' }}</span>
           </div>
         </div>
       </div>
@@ -80,7 +82,7 @@
           <p class="text-xs text-muted-foreground mb-1">Day's Range</p>
           <p class="font-semibold mono text-sm">
             <span v-if="quote.dayLow && quote.dayHigh">{{ formatPrice(quote.dayLow) }} – {{ formatPrice(quote.dayHigh)
-            }}</span>
+              }}</span>
             <span v-else>—</span>
           </p>
         </div>

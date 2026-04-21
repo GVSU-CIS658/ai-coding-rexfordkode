@@ -5,10 +5,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 APP_DIR="$REPO_ROOT/artifacts/stockwatch"
 BUILD_DIR="$APP_DIR/dist/public"
-PAGES_DIR="$REPO_ROOT/.gh-pages-build"
+TEMP_DIR="$(mktemp -d)"
+PUBLISH_DIR="$TEMP_DIR/gh-pages"
 
 cleanup() {
-  rm -rf "$PAGES_DIR"
+  rm -rf "$TEMP_DIR"
 }
 
 trap cleanup EXIT
@@ -28,28 +29,35 @@ if [[ ! -d "$BUILD_DIR" ]]; then
   exit 1
 fi
 
-# Create worktree for gh-pages branch
-git worktree add "$PAGES_DIR" gh-pages 2>/dev/null || git worktree add -B gh-pages "$PAGES_DIR" HEAD
+# Create a clean temp clone so only built assets are published
+git clone --depth 1 --branch gh-pages "$REMOTE_URL" "$PUBLISH_DIR" 2>/dev/null || git clone --depth 1 "$REMOTE_URL" "$PUBLISH_DIR"
 
-# Clear and copy new build
-rm -rf "$PAGES_DIR"/*
-rsync -a --delete "$BUILD_DIR"/ "$PAGES_DIR"/
-touch "$PAGES_DIR/.nojekyll"
+cd "$PUBLISH_DIR"
 
-# Commit and push
-cd "$PAGES_DIR"
+# Ensure gh-pages branch exists locally
+if git show-ref --quiet refs/heads/gh-pages; then
+  git checkout gh-pages
+elif git show-ref --quiet refs/remotes/origin/gh-pages; then
+  git checkout -B gh-pages origin/gh-pages
+else
+  git checkout --orphan gh-pages
+fi
+
+# Remove existing published files but keep git metadata
+find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+
+# Copy build output and publish
+rsync -a "$BUILD_DIR"/ "$PUBLISH_DIR"/
+touch "$PUBLISH_DIR/.nojekyll"
+
 git add -A
 
 if git diff --cached --quiet; then
   echo "No deployment changes to publish."
-  cd "$REPO_ROOT"
-  git worktree remove "$PAGES_DIR" 2>/dev/null || true
   exit 0
 fi
 
 git commit -m "Deploy stockwatch to GitHub Pages"
 git push origin gh-pages --force
 
-cd "$REPO_ROOT"
-git worktree remove "$PAGES_DIR" 2>/dev/null || true
 echo "✅ Deployment complete!"
