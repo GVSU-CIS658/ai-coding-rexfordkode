@@ -1,12 +1,13 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
-import { db, watchlistTable } from "@workspace/db";
+import { requireDb, watchlistTable } from "@workspace/db";
 import {
   AddToWatchlistBody,
   RemoveFromWatchlistParams,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
+const db = requireDb();
 
 router.get("/watchlist", async (_req, res): Promise<void> => {
   const items = await db.select().from(watchlistTable).orderBy(watchlistTable.addedAt);

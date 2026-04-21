@@ -16,7 +16,7 @@
     <LoadingSpinner v-if="portfolioStore.loading" fullScreen />
 
     <!-- Empty state -->
-    <div v-else-if="!portfolioStore.summary || portfolioStore.summary.positions.length === 0" class="text-center py-16">
+    <div v-else-if="!summary || positions.length === 0" class="text-center py-16">
       <div class="w-14 h-14 rounded-full bg-card border border-border flex items-center justify-center mx-auto mb-4">
         <BarChart3 class="w-7 h-7 text-muted-foreground" />
       </div>
@@ -35,19 +35,17 @@
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         <div class="bg-card border border-border rounded-xl p-4">
           <p class="text-xs text-muted-foreground font-medium uppercase tracking-wide">Total Value</p>
-          <p class="text-xl font-semibold mono mt-1.5">{{ formatPrice(portfolioStore.summary.totalValue) }}</p>
+          <p class="text-xl font-semibold mono mt-1.5">{{ formatPrice(summary.totalValue) }}</p>
         </div>
         <div class="bg-card border border-border rounded-xl p-4">
           <p class="text-xs text-muted-foreground font-medium uppercase tracking-wide">Total Cost</p>
-          <p class="text-xl font-semibold mono mt-1.5">{{ formatPrice(portfolioStore.summary.totalCost) }}</p>
+          <p class="text-xl font-semibold mono mt-1.5">{{ formatPrice(summary.totalCost) }}</p>
         </div>
         <div class="bg-card border border-border rounded-xl p-4 col-span-2">
           <p class="text-xs text-muted-foreground font-medium uppercase tracking-wide">Total Gain/Loss</p>
-          <p class="text-xl font-semibold mono mt-1.5"
-            :class="portfolioStore.summary.totalGainLoss >= 0 ? 'text-green-400' : 'text-red-400'">
-            {{ formatChange(portfolioStore.summary.totalGainLoss) }}
-            <span class="text-base ml-1.5 opacity-80">{{ formatPercent(portfolioStore.summary.totalGainLossPercent)
-              }}</span>
+          <p class="text-xl font-semibold mono mt-1.5" :class="summary.totalGainLoss >= 0 ? 'text-green-400' : 'text-red-400'">
+            {{ formatChange(summary.totalGainLoss) }}
+            <span class="text-base ml-1.5 opacity-80">{{ formatPercent(summary.totalGainLossPercent) }}</span>
           </p>
         </div>
       </div>
@@ -75,7 +73,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="pos in portfolioStore.summary.positions" :key="pos.id"
+            <tr v-for="pos in positions" :key="pos.id"
               class="border-b border-border/50 last:border-0 hover:bg-accent/30 transition-colors">
               <td class="px-4 py-3 cursor-pointer" @click="$router.push(`/stock/${pos.symbol}`)">
                 <div>
@@ -122,7 +120,7 @@
 
       <!-- Cards - Mobile -->
       <div class="md:hidden space-y-3">
-        <div v-for="pos in portfolioStore.summary.positions" :key="pos.id"
+        <div v-for="pos in positions" :key="pos.id"
           class="bg-card border border-border rounded-xl p-4">
           <div class="flex items-start justify-between mb-3">
             <div class="cursor-pointer" @click="$router.push(`/stock/${pos.symbol}`)">
@@ -209,24 +207,19 @@
       </form>
     </AppModal>
 
-    <!-- Toast -->
-    <Transition name="slide-up">
-      <div v-if="toast"
-        class="fixed bottom-24 md:bottom-6 left-1/2 -translate-x-1/2 bg-card border border-border rounded-xl px-4 py-2.5 shadow-lg text-sm flex items-center gap-2 z-50">
-        <CheckCircle class="w-4 h-4 text-green-400" />
-        {{ toast }}
-      </div>
-    </Transition>
+    <ToastBanner :message="toast" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { Plus, BarChart3, Trash2, CheckCircle } from "lucide-vue-next";
+import { ref, onMounted, computed } from "vue";
+import { Plus, BarChart3, Trash2 } from "lucide-vue-next";
 import { usePortfolioStore } from "../stores/portfolio";
 import LoadingSpinner from "../components/LoadingSpinner.vue";
 import AppModal from "../components/AppModal.vue";
+import ToastBanner from "../components/ToastBanner.vue";
 import { formatPrice, formatChange, formatPercent } from "../lib/format";
+import { withLoading } from "../lib/withLoading";
 import { useToast } from "../composables/useToast";
 
 const portfolioStore = usePortfolioStore();
@@ -235,24 +228,26 @@ const addLoading = ref(false);
 const addError = ref<string | null>(null);
 const form = ref({ symbol: "", shares: 0, buyPrice: 0, notes: "" });
 const { toast, showToast } = useToast();
+const summary = computed(() => portfolioStore.summary);
+const positions = computed(() => summary.value?.positions ?? []);
 
 async function submitAdd() {
   addError.value = null;
-  addLoading.value = true;
   try {
-    await portfolioStore.addPosition(
-      form.value.symbol.toUpperCase(),
-      form.value.shares,
-      form.value.buyPrice,
-      form.value.notes || undefined
-    );
-    await portfolioStore.fetchSummary();
-    closeModal();
-    showToast(`${form.value.symbol.toUpperCase()} added to portfolio`);
+    const symbol = form.value.symbol.toUpperCase();
+    await withLoading(addLoading, async () => {
+      await portfolioStore.addPosition(
+        symbol,
+        form.value.shares,
+        form.value.buyPrice,
+        form.value.notes || undefined
+      );
+      await portfolioStore.fetchSummary();
+      closeModal();
+      showToast(`${symbol} added to portfolio`);
+    });
   } catch (e: unknown) {
     addError.value = e instanceof Error ? e.message : "Failed to add position";
-  } finally {
-    addLoading.value = false;
   }
 }
 

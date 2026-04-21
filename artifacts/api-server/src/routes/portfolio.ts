@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
-import { db, portfolioTable } from "@workspace/db";
+import { requireDb, portfolioTable } from "@workspace/db";
 import { fetchQuotes } from "../lib/yahooFinance";
 import {
   AddPortfolioPositionBody,
@@ -10,6 +10,7 @@ import {
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
+const db = requireDb();
 
 function mapPosition(p: typeof portfolioTable.$inferSelect) {
   return {

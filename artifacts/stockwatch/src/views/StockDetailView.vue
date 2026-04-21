@@ -165,14 +165,7 @@
       </form>
     </AppModal>
 
-    <!-- Toast -->
-    <Transition name="slide-up">
-      <div v-if="toast"
-        class="fixed bottom-24 md:bottom-6 left-1/2 -translate-x-1/2 bg-card border border-border rounded-xl px-4 py-2.5 shadow-lg text-sm flex items-center gap-2 z-50">
-        <CheckCircle class="w-4 h-4 text-green-400" />
-        {{ toast }}
-      </div>
-    </Transition>
+    <ToastBanner :message="toast" />
   </div>
 </template>
 
@@ -181,14 +174,16 @@ import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import {
   ChevronLeft, BookmarkPlus, BookmarkCheck, Plus,
-  RefreshCw, AlertCircle, CheckCircle
+  RefreshCw, AlertCircle
 } from "lucide-vue-next";
 import { useStockStore } from "../stores/stocks";
 import { usePortfolioStore } from "../stores/portfolio";
 import LoadingSpinner from "../components/LoadingSpinner.vue";
 import AppModal from "../components/AppModal.vue";
+import ToastBanner from "../components/ToastBanner.vue";
 import { formatPrice, formatChange, formatPercent, formatVolume, formatMarketCap } from "../lib/format";
 import type { StockQuote } from "../stores/stocks";
+import { withLoading } from "../lib/withLoading";
 import { useToast } from "../composables/useToast";
 
 const route = useRoute();
@@ -222,15 +217,19 @@ const weekRangePercent = computed(() => {
 });
 
 async function loadQuote() {
-  loading.value = true;
-  quote.value = await stockStore.fetchQuote(symbol.value);
-  loading.value = false;
+  await withLoading(loading, async () => {
+    await updateQuote();
+  });
 }
 
 async function refreshQuote() {
-  refreshing.value = true;
+  await withLoading(refreshing, async () => {
+    await updateQuote();
+  });
+}
+
+async function updateQuote() {
   quote.value = await stockStore.fetchQuote(symbol.value);
-  refreshing.value = false;
 }
 
 async function addToWatchlist() {

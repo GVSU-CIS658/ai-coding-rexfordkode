@@ -166,25 +166,20 @@
       </div>
     </AppModal>
 
-    <!-- Toast -->
-    <Transition name="slide-up">
-      <div v-if="toast"
-        class="fixed bottom-24 md:bottom-6 left-1/2 -translate-x-1/2 bg-card border border-border rounded-xl px-4 py-2.5 shadow-lg text-sm flex items-center gap-2 z-50">
-        <CheckCircle class="w-4 h-4 text-green-400" />
-        {{ toast }}
-      </div>
-    </Transition>
+    <ToastBanner :message="toast" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import { RefreshCw, Plus, Bookmark, Trash2, Search, CheckCircle } from "lucide-vue-next";
+import { RefreshCw, Plus, Bookmark, Trash2, Search } from "lucide-vue-next";
 import { useStockStore } from "../stores/stocks";
 import LoadingSpinner from "../components/LoadingSpinner.vue";
 import StatCard from "../components/StatCard.vue";
 import AppModal from "../components/AppModal.vue";
+import ToastBanner from "../components/ToastBanner.vue";
 import { formatPrice, formatChange, formatPercent, formatVolume, formatMarketCap } from "../lib/format";
+import { withLoading } from "../lib/withLoading";
 import { mockApi as api } from "../lib/mockApi";
 import { useToast } from "../composables/useToast";
 
@@ -225,12 +220,9 @@ function onAddInput() {
   clearTimeout(debounceTimer);
   if (!addQuery.value.trim()) { addResults.value = []; return; }
   debounceTimer = setTimeout(async () => {
-    addLoading.value = true;
-    try {
+    await withLoading(addLoading, async () => {
       addResults.value = await api.get(`/stocks/search?q=${encodeURIComponent(addQuery.value)}`);
-    } finally {
-      addLoading.value = false;
-    }
+    });
   }, 300);
 }
 
@@ -248,14 +240,16 @@ async function removeItem(id: number, symbol: string) {
 }
 
 async function refreshQuotes() {
-  refreshing.value = true;
-  await stockStore.refreshWatchlistQuotes();
-  refreshing.value = false;
+  await withLoading(refreshing, async () => {
+    await stockStore.refreshWatchlistQuotes();
+  });
 }
 
-onMounted(async () => {
-  loading.value = true;
-  await stockStore.fetchWatchlist();
-  loading.value = false;
-});
+async function loadWatchlist() {
+  await withLoading(loading, async () => {
+    await stockStore.fetchWatchlist();
+  });
+}
+
+onMounted(loadWatchlist);
 </script>

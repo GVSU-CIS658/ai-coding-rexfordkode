@@ -9,4 +9,12 @@ const connectionString = process.env.DATABASE_URL;
 export const pool = connectionString ? new Pool({ connectionString }) : null;
 export const db = pool ? drizzle(pool, { schema }) : null;
 
+export function requireDb() {
+  if (!db) {
+    throw new Error("DATABASE_URL is required to use the API server");
+  }
+
+  return db;
+}
+
 export * from "./schema";

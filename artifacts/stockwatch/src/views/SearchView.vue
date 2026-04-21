@@ -91,26 +91,18 @@
       />
     </div>
 
-    <!-- Toast -->
-    <Transition name="slide-up">
-      <div
-        v-if="toast"
-        class="fixed bottom-24 md:bottom-6 left-1/2 -translate-x-1/2 bg-card border border-border rounded-xl px-4 py-2.5 shadow-lg text-sm flex items-center gap-2 z-50"
-      >
-        <CheckCircle class="w-4 h-4 text-green-400" />
-        {{ toast }}
-      </div>
-    </Transition>
+    <ToastBanner :message="toast" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import { Search, ChevronRight, X, CheckCircle } from "lucide-vue-next";
+import { Search, ChevronRight, X } from "lucide-vue-next";
 import { useStockStore } from "../stores/stocks";
 import StockCard from "../components/StockCard.vue";
 import LoadingSpinner from "../components/LoadingSpinner.vue";
+import ToastBanner from "../components/ToastBanner.vue";
 import type { StockQuote } from "../stores/stocks";
 import { useToast } from "../composables/useToast";
 

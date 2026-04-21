@@ -103,27 +103,20 @@
       </div>
     </div>
 
-    <!-- Toast -->
-    <Transition name="slide-up">
-      <div
-        v-if="toast"
-        class="fixed bottom-24 md:bottom-6 left-1/2 -translate-x-1/2 bg-card border border-border rounded-xl px-4 py-2.5 shadow-lg text-sm flex items-center gap-2 z-50"
-      >
-        <CheckCircle class="w-4 h-4 text-green-400" />
-        {{ toast }}
-      </div>
-    </Transition>
+    <ToastBanner :message="toast" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import { TrendingUp, TrendingDown, Flame, RefreshCw, CheckCircle } from "lucide-vue-next";
+import { TrendingUp, TrendingDown, Flame, RefreshCw } from "lucide-vue-next";
 import { useStockStore } from "../stores/stocks";
 import StockCard from "../components/StockCard.vue";
 import LoadingSpinner from "../components/LoadingSpinner.vue";
 import StatCard from "../components/StatCard.vue";
+import ToastBanner from "../components/ToastBanner.vue";
 import { formatPercent } from "../lib/format";
+import { withLoading } from "../lib/withLoading";
 import { useToast } from "../composables/useToast";
 
 const stockStore = useStockStore();
@@ -151,13 +144,13 @@ const marketStats = computed(() => {
 });
 
 async function refreshData() {
-  loading.value = true;
-  await Promise.all([
-    stockStore.fetchTrending(),
-    stockStore.fetchMarketMovers(),
-    stockStore.fetchWatchlist(),
-  ]);
-  loading.value = false;
+  await withLoading(loading, async () => {
+    await Promise.all([
+      stockStore.fetchTrending(),
+      stockStore.fetchMarketMovers(),
+      stockStore.fetchWatchlist(),
+    ]);
+  });
 }
 
 async function handleAddToWatchlist(symbol: string) {
@@ -173,13 +166,5 @@ async function handleRemoveFromWatchlist(symbol: string) {
   }
 }
 
-onMounted(async () => {
-  loading.value = true;
-  await Promise.all([
-    stockStore.fetchTrending(),
-    stockStore.fetchMarketMovers(),
-    stockStore.fetchWatchlist(),
-  ]);
-  loading.value = false;
-});
+onMounted(refreshData);
 </script>
