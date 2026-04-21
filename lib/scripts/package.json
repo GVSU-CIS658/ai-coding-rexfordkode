@@ -4,7 +4,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "hello": "tsx ./src/hello.ts",
     "deploy:github-pages": "bash ./deploy-stockwatch-gh-pages.sh",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

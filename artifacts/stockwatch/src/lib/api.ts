@@ -1,24 +1,8 @@
-const BASE = "/api";
+// Always use mock API for GitHub Pages deployment
+// This allows the app to work on static hosting without a backend server
+import { mockApi } from "./mockApi";
 
-async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
-    method,
-    headers: body ? { "Content-Type": "application/json" } : {},
-    body: body ? JSON.stringify(body) : undefined,
-  });
+// Log to confirm mock API is being used
+console.log("[StockWatch] Using mock API for GitHub Pages deployment");
 
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(errorData.error ?? `Request failed: ${res.status}`);
-  }
-
-  if (res.status === 204) return undefined as T;
-  return res.json() as Promise<T>;
-}
-
-export const api = {
-  get: <T>(path: string) => request<T>("GET", path),
-  post: <T>(path: string, body: unknown) => request<T>("POST", path, body),
-  patch: <T>(path: string, body: unknown) => request<T>("PATCH", path, body),
-  delete: (path: string) => request<void>("DELETE", path),
-};
+export const api = mockApi;

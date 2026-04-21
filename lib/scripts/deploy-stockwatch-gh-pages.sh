@@ -20,9 +20,13 @@ REMOTE_URL="$(git remote get-url origin)"
 REPO_NAME="${GITHUB_PAGES_REPO_NAME:-$(basename -s .git "$REMOTE_URL")}"
 BASE_PATH="${GITHUB_PAGES_BASE_PATH:-/${REPO_NAME}/}"
 
+# Use mock API for GitHub Pages (no backend server needed)
+export VITE_USE_MOCK=true
+
 echo "Building stockwatch for GitHub Pages at base path: $BASE_PATH"
+echo "Using MOCK API mode (no backend server required)"
 pnpm install --frozen-lockfile
-PORT=3000 BASE_PATH="$BASE_PATH" pnpm --filter @workspace/stockwatch build
+PORT=3000 BASE_PATH="$BASE_PATH" VITE_USE_MOCK=true pnpm --filter @workspace/stockwatch build
 
 if [[ ! -d "$BUILD_DIR" ]]; then
   echo "Expected build output was not found at $BUILD_DIR" >&2

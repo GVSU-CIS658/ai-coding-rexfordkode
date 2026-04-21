@@ -38,7 +38,7 @@
           <div class="flex items-center gap-1 justify-end mt-1">
             <div class="w-1.5 h-1.5 rounded-full"
               :class="quote.marketState === 'REGULAR' ? 'bg-green-400' : 'bg-yellow-400'"></div>
-            <span class="text-xs text-muted-foreground">{{ quote.marketState === 'REGULAR' ? 'Market Open' : quote.marketState === 'PRE' ? 'Pre-Market' : quote.marketState === 'POST' ? 'After-Hours' : 'Market Closed' }}</span>
+            <span class="text-xs text-muted-foreground">{{ marketStateLabel }}</span>
           </div>
         </div>
       </div>
@@ -204,6 +204,14 @@ const portfolioLoading = ref(false);
 const toast = ref<string | null>(null);
 
 const inWatchlist = computed(() => stockStore.watchlistSymbols.has(symbol.value));
+
+const marketStateLabel = computed(() => {
+  if (!quote.value) return "Market Closed";
+  if (quote.value.marketState === "REGULAR") return "Market Open";
+  if (quote.value.marketState === "PRE") return "Pre-Market";
+  if (quote.value.marketState === "POST") return "After-Hours";
+  return "Market Closed";
+});
 
 const weekRangePercent = computed(() => {
   if (!quote.value?.fiftyTwoWeekLow || !quote.value?.fiftyTwoWeekHigh) return 0;

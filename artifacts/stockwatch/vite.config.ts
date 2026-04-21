@@ -27,6 +27,9 @@ if (!basePath) {
 
 export default defineConfig({
   base: basePath,
+  define: {
+    "import.meta.env.VITE_USE_MOCK": JSON.stringify(process.env.VITE_USE_MOCK || "false"),
+  },
   plugins: [
     vue(),
     tailwindcss(),
